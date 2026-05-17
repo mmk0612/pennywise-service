@@ -10,6 +10,67 @@ RUN mvn dependency:go-offline
 # Copy source code
 COPY src ./src
 
+# Create resources directory if it doesn't exist
+RUN mkdir -p src/main/resources
+
+# Create application.yml with environment variable placeholders
+RUN mkdir -p src/main/resources && \
+    printf '%s\n' \
+      'spring:' \
+      '  application:' \
+      '    name: pennywise-server' \
+      '  datasource:' \
+      '    url: ${DB_URL}' \
+      '    username: ${DB_USERNAME}' \
+      '    password: ${DB_PASSWORD}' \
+      '    driver-class-name: org.postgresql.Driver' \
+      '  jpa:' \
+      '    hibernate:' \
+      '      ddl-auto: update' \
+      '    show-sql: false' \
+      '    open-in-view: false' \
+      '    properties:' \
+      '      hibernate:' \
+      '        format_sql: true' \
+      '        dialect: org.hibernate.dialect.PostgreSQLDialect' \
+      '  mail:' \
+      '    host: ${MAIL_HOST}' \
+      '    port: ${MAIL_PORT}' \
+      '    username: ${MAIL_USERNAME}' \
+      '    password: ${MAIL_PASSWORD}' \
+      '    properties:' \
+      '      mail:' \
+      '        smtp:' \
+      '          auth: true' \
+      '          starttls:' \
+      '            enable: true' \
+      '  rabbitmq:' \
+      '    host: ${RABBITMQ_HOST}' \
+      '    port: ${RABBITMQ_PORT}' \
+      '    username: ${RABBITMQ_USERNAME}' \
+      '    password: ${RABBITMQ_PASSWORD}' \
+      'server:' \
+      '  port: ${SERVER_PORT:8080}' \
+      'app:' \
+      '  cors:' \
+      '    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}' \
+      '  jwt:' \
+      '    secret: ${JWT_SECRET}' \
+      '    expiration: ${JWT_EXPIRATION:3600000}' \
+      '    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}' \
+      'nvidia:' \
+      '  api:' \
+      '    key: ${NVIDIA_API_KEY}' \
+      '    url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/chat/completions}' \
+      '    model: ${NVIDIA_API_MODEL:google/gemma-3n-e2b-it}' \
+      'pennywise:' \
+      '  s3:' \
+      '    bucket: ${PENNYWISE_S3_BUCKET}' \
+      '    region: ${PENNYWISE_S3_REGION}' \
+      '    access-key: ${PENNYWISE_S3_ACCESS_KEY}' \
+      '    secret-key: ${PENNYWISE_S3_SECRET_KEY}' \
+      > src/main/resources/application.yml
+
 # Build the application
 RUN mvn clean package -DskipTests
 
