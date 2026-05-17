@@ -11,8 +11,6 @@ RUN mvn dependency:go-offline
 COPY src ./src
 
 # Create resources directory if it doesn't exist
-RUN mkdir -p src/main/resources
-
 # Create application.yml with environment variable placeholders
 RUN mkdir -p src/main/resources && \
     printf '%s\n' \
@@ -32,7 +30,6 @@ RUN mkdir -p src/main/resources && \
       '    properties:' \
       '      hibernate:' \
       '        format_sql: true' \
-      '        dialect: org.hibernate.dialect.PostgreSQLDialect' \
       '  mail:' \
       '    host: ${MAIL_HOST}' \
       '    port: ${MAIL_PORT}' \
