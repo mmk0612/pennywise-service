@@ -47,7 +47,7 @@ app:
 
 nvidia:
   api:
-    key: ${NVIDIA_API_KEY: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}
+    key: ${NVIDIA_API_KEY:}
     url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/chat/completions}
     model: ${NVIDIA_API_MODEL:google/gemma-3n-e2b-it}
 
