@@ -42,10 +42,7 @@ RUN mkdir -p src/main/resources && \
       '          starttls:' \
       '            enable: true' \
       '  rabbitmq:' \
-      '    host: ${RABBITMQ_HOST}' \
-      '    port: ${RABBITMQ_PORT}' \
-      '    username: ${RABBITMQ_USERNAME}' \
-      '    password: ${RABBITMQ_PASSWORD}' \
+      '    addresses: ${RABBITMQ_URL}' \
       'server:' \
       '  port: ${SERVER_PORT:8080}' \
       'app:' \
