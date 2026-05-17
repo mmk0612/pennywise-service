@@ -20,7 +20,7 @@ RUN mkdir -p src/main/resources && \
       '  application:' \
       '    name: pennywise-server' \
       '  datasource:' \
-      '    url: ${DB_URL}' \
+      '    url: ${DB_URL:${DATABASE_URL:}}' \
       '    username: ${DB_USERNAME}' \
       '    password: ${DB_PASSWORD}' \
       '    driver-class-name: org.postgresql.Driver' \
