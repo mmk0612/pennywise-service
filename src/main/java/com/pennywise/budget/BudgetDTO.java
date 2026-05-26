@@ -7,16 +7,20 @@ public class BudgetDTO {
 
     public record CreateBudgetRequest(
             String name,
+            String icon,
             BigDecimal amount,
             String period,
+            String billingMonth,
             Instant startDate,
             Instant endDate
     ) {}
 
     public record UpdateBudgetRequest(
             String name,
+            String icon,
             BigDecimal amount,
             String period,
+            String billingMonth,
             Instant startDate,
             Instant endDate
     ) {}
@@ -25,8 +29,10 @@ public class BudgetDTO {
             Long id,
             Long userId,
             String name,
+            String icon,
             BigDecimal amount,
             String period,
+            String billingMonth,
             Instant startDate,
             Instant endDate,
             Instant createdAt,

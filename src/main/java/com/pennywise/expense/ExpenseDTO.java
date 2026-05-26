@@ -9,6 +9,7 @@ public class ExpenseDTO {
             String title,
             BigDecimal amount,
             Instant expenseDate,
+            String billingMonth,
             Long budgetId,
             Long categoryId,
             String notes
@@ -18,6 +19,7 @@ public class ExpenseDTO {
             String title,
             BigDecimal amount,
             Instant expenseDate,
+            String billingMonth,
             Long budgetId,
             Long categoryId,
             String notes
@@ -29,6 +31,7 @@ public class ExpenseDTO {
             String title,
             BigDecimal amount,
             Instant expenseDate,
+            String billingMonth,
             Long budgetId,
             Long categoryId,
             String notes,

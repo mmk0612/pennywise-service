@@ -57,7 +57,7 @@ public class AiCategorizationService {
                     "'title' (the merchant or description), " +
                     "'amount' (the amount as a number), and " +
                     "'suggestedBudgetId' (the best matching budget ID, or null if no match). " +
-                    "Example: [{\"rawText\": \"12/01 WALMART $45.00\", \"title\": \"WALMART\", \"amount\": 45.00, \"suggestedBudgetId\": 5}]";
+                    "Example: [{\"rawText\": \"12/01 WALMART Rs. 45.00\", \"title\": \"GROCERIES\", \"amount\": 45.00, \"suggestedBudgetId\": 5}]";
 
             List<Map<String, Object>> contentArray = new ArrayList<>();
             contentArray.add(Map.of("type", "text", "text", prompt));

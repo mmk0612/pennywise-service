@@ -2,6 +2,9 @@ package com.pennywise.expense;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Transactional
 public class ExpenseService {
     private final ExpenseRepository expenseRepository;
+    private final ExpenseMonthlyArchiveRepository expenseMonthlyArchiveRepository;
     
     @Autowired
     private AiPredictionLogRepository aiPredictionLogRepository;
@@ -22,8 +26,9 @@ public class ExpenseService {
     @Autowired
     private StatementUploadRequestRepository statementUploadRequestRepository;
 
-    public ExpenseService(ExpenseRepository expenseRepository) {
+    public ExpenseService(ExpenseRepository expenseRepository, ExpenseMonthlyArchiveRepository expenseMonthlyArchiveRepository) {
         this.expenseRepository = expenseRepository;
+        this.expenseMonthlyArchiveRepository = expenseMonthlyArchiveRepository;
     }
 
     public List<ExpenseDTO.ExpenseResponse> saveConfirmedExpenses(List<ConfirmedExpenseDTO> confirmedExpenses, Long userId) {
@@ -55,6 +60,7 @@ public class ExpenseService {
             expense.setTitle(dto.getTitle());
             expense.setAmount(dto.getAmount());
             expense.setExpenseDate(dto.getDate());
+            expense.setBillingMonth(resolveBillingMonth(null, dto.getDate()));
             expense.setNotes("Imported from statement");
             
             Expense savedExpense = expenseRepository.save(expense);
@@ -103,6 +109,7 @@ public class ExpenseService {
         expense.setTitle(request.title());
         expense.setAmount(request.amount());
         expense.setExpenseDate(request.expenseDate());
+        expense.setBillingMonth(resolveBillingMonth(request.billingMonth(), request.expenseDate()));
         expense.setBudgetId(request.budgetId());
         expense.setCategoryId(request.categoryId());
         expense.setNotes(request.notes());
@@ -117,9 +124,15 @@ public class ExpenseService {
         return toExpenseResponse(expense);
     }
 
-    public List<ExpenseDTO.ExpenseResponse> getUserExpenses(Long userId) {
-        return expenseRepository.findByUserId(userId)
-                .stream()
+    public List<ExpenseDTO.ExpenseResponse> getUserExpenses(Long userId, String billingMonth) {
+        String targetMonth = normalizeBillingMonth(billingMonth);
+        List<Expense> expenses = targetMonth.equals(currentMonthKey())
+                ? expenseRepository.findByUserIdAndBillingMonth(userId, targetMonth)
+                : expenseMonthlyArchiveRepository.findByUserIdAndBillingMonth(userId, targetMonth).stream()
+                        .map(this::toExpenseEntity)
+                        .collect(Collectors.toList());
+
+        return expenses.stream()
                 .map(this::toExpenseResponse)
                 .collect(Collectors.toList());
     }
@@ -138,6 +151,7 @@ public class ExpenseService {
         expense.setTitle(request.title());
         expense.setAmount(request.amount());
         expense.setExpenseDate(request.expenseDate());
+        expense.setBillingMonth(resolveBillingMonth(request.billingMonth(), request.expenseDate()));
         expense.setBudgetId(request.budgetId());
         expense.setCategoryId(request.categoryId());
         expense.setNotes(request.notes());
@@ -161,11 +175,43 @@ public class ExpenseService {
                 expense.getTitle(),
                 expense.getAmount(),
                 expense.getExpenseDate(),
+                expense.getBillingMonth(),
                 expense.getBudgetId(),
                 expense.getCategoryId(),
                 expense.getNotes(),
                 expense.getCreatedAt(),
                 expense.getUpdatedAt()
         );
+    }
+
+    private String resolveBillingMonth(String explicitBillingMonth, Instant referenceDate) {
+        if (explicitBillingMonth != null && !explicitBillingMonth.isBlank()) {
+            return explicitBillingMonth;
+        }
+
+        Instant effectiveDate = referenceDate != null ? referenceDate : Instant.now();
+        return YearMonth.from(effectiveDate.atZone(ZoneOffset.UTC)).toString();
+    }
+
+    private String normalizeBillingMonth(String billingMonth) {
+        return billingMonth != null && !billingMonth.isBlank() ? billingMonth : currentMonthKey();
+    }
+
+    private String currentMonthKey() {
+        return YearMonth.now(ZoneOffset.UTC).toString();
+    }
+
+    private Expense toExpenseEntity(ExpenseMonthlyArchive archive) {
+        Expense expense = new Expense();
+        expense.setId(archive.getId());
+        expense.setUserId(archive.getUserId());
+        expense.setBudgetId(archive.getBudgetId());
+        expense.setCategoryId(archive.getCategoryId());
+        expense.setTitle(archive.getTitle());
+        expense.setAmount(archive.getAmount());
+        expense.setExpenseDate(archive.getExpenseDate());
+        expense.setBillingMonth(archive.getBillingMonth());
+        expense.setNotes(archive.getNotes());
+        return expense;
     }
 }

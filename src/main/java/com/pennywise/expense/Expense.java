@@ -29,6 +29,9 @@ public class Expense {
     @Column(nullable = false)
     private Instant expenseDate;
 
+    @Column(nullable = false)
+    private String billingMonth;
+
     @Column
     private String notes;
 
@@ -40,7 +43,7 @@ public class Expense {
 
     public Expense() {}
 
-    public Expense(Long id, Long userId, Long budgetId, Long categoryId, String title, BigDecimal amount, Instant expenseDate, String notes, Instant createdAt, Instant updatedAt) {
+    public Expense(Long id, Long userId, Long budgetId, Long categoryId, String title, BigDecimal amount, Instant expenseDate, String billingMonth, String notes, Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.userId = userId;
         this.budgetId = budgetId;
@@ -48,9 +51,14 @@ public class Expense {
         this.title = title;
         this.amount = amount;
         this.expenseDate = expenseDate;
+        this.billingMonth = billingMonth;
         this.notes = notes;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : Instant.now();
+    }
+
+    public Expense(Long id, Long userId, Long budgetId, Long categoryId, String title, BigDecimal amount, Instant expenseDate, String notes, Instant createdAt, Instant updatedAt) {
+        this(id, userId, budgetId, categoryId, title, amount, expenseDate, null, notes, createdAt, updatedAt);
     }
 
     // Getters and setters
@@ -68,6 +76,8 @@ public class Expense {
     public void setAmount(BigDecimal amount) { this.amount = amount; }
     public Instant getExpenseDate() { return expenseDate; }
     public void setExpenseDate(Instant expenseDate) { this.expenseDate = expenseDate; }
+    public String getBillingMonth() { return billingMonth; }
+    public void setBillingMonth(String billingMonth) { this.billingMonth = billingMonth; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
     public Instant getCreatedAt() { return createdAt; }

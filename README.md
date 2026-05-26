@@ -89,6 +89,12 @@ mvn spring-boot:run
 - **Dashboard Module**: Aggregates budget and expense data for dashboard visualization
 - **Subscription Module**: Manages subscription plans and upgrades
 
+## Monthly Storage
+
+- Budget and expense records include a `billingMonth` value in `YYYY-MM` format.
+- A scheduled archive job runs at the start of each month and moves the previous month's budgets and expenses into month-specific archive tables.
+- This keeps the active tables focused on the current month while preserving historical data separately.
+
 ## Error Handling
 
 All endpoints return consistent error responses with:

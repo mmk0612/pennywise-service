@@ -30,8 +30,9 @@ public class BudgetController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<BudgetDTO.BudgetResponse>>> getUserBudgets(
-            @AuthenticatedUser Long userId) {
-        List<BudgetDTO.BudgetResponse> response = budgetService.getUserBudgets(userId);
+            @AuthenticatedUser Long userId,
+            @RequestParam(value = "month", required = false) String month) {
+        List<BudgetDTO.BudgetResponse> response = budgetService.getUserBudgets(userId, month);
         return ResponseEntity.ok(ApiResponse.success(response, "Budgets retrieved"));
     }
 

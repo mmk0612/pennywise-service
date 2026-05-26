@@ -30,8 +30,9 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ExpenseDTO.ExpenseResponse>>> getUserExpenses(
-            @AuthenticatedUser Long userId) {
-        List<ExpenseDTO.ExpenseResponse> response = expenseService.getUserExpenses(userId);
+            @AuthenticatedUser Long userId,
+            @RequestParam(value = "month", required = false) String month) {
+        List<ExpenseDTO.ExpenseResponse> response = expenseService.getUserExpenses(userId, month);
         return ResponseEntity.ok(ApiResponse.success(response, "Expenses retrieved"));
     }
 
