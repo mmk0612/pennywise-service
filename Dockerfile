@@ -30,6 +30,9 @@ RUN mkdir -p src/main/resources && \
       '    properties:' \
       '      hibernate:' \
       '        format_sql: true' \
+      '  flyway:' \
+      '    baseline-on-migrate: true' \
+      '    baseline-version: 0' \
       '  mail:' \
       '    host: ${MAIL_HOST}' \
       '    port: ${MAIL_PORT}' \
