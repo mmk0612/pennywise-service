@@ -59,7 +59,7 @@ RUN mkdir -p src/main/resources && \
       '  api:' \
       '    key: ${NVIDIA_API_KEY}' \
       '    url: ${NVIDIA_API_URL:https://integrate.api.nvidia.com/v1/chat/completions}' \
-      '    model: ${NVIDIA_API_MODEL:google/gemma-3n-e2b-it}' \
+      '    model: ${NVIDIA_API_MODEL:google/gemma-4-31b-it}' \
       'pennywise:' \
       '  s3:' \
       '    bucket: ${PENNYWISE_S3_BUCKET}' \

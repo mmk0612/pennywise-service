@@ -27,7 +27,7 @@ public class AiCategorizationService {
     @Value("${nvidia.api.url:https://integrate.api.nvidia.com/v1/chat/completions}")
     private String apiUrl;
 
-    @Value("${nvidia.api.model:google/gemma-3n-e2b-it}")
+    @Value("${nvidia.api.model:google/gemma-4-31b-it}")
     private String modelName;
 
     private final RestTemplate restTemplate = new RestTemplate();
