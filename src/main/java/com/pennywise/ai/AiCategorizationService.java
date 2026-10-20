@@ -82,7 +82,7 @@ public class AiCategorizationService {
         requestBody.put("model", modelName);
         requestBody.put("messages", List.of(userMessage));
         requestBody.put("temperature", 0.1);
-        requestBody.put("max_tokens", 1024);
+        requestBody.put("max_tokens", payloadType == StatementMessage.PayloadType.IMAGE ? 4096 : 1024);
 
         String requestJson = null;
         try {
