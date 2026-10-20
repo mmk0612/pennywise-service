@@ -48,16 +48,18 @@ public class AiCategorizationService {
         userMessage.put("role", "user");
 
         if (payloadType == StatementMessage.PayloadType.IMAGE) {
-            String prompt = "You are a financial assistant. Below is a list of my current budgets:\n" +
+            String prompt = "You are a financial transaction extraction service. Below is a list of current budgets:\n" +
                     budgetsContext + "\n\n" +
-                    "I am providing an image of a bank statement. Please extract all the transactions from this image. " +
-                    "For each transaction, determine the best matching suggestedBudgetId. " +
-                    "Return ONLY a JSON array of objects, where each object has: " +
-                    "'rawText' (the extracted raw line from the image), " +
-                    "'title' (the merchant or description), " +
-                    "'amount' (the amount as a number), and " +
-                    "'suggestedBudgetId' (the best matching budget ID, or null if no match). " +
-                    "Example: [{\"rawText\": \"12/01 WALMART Rs. 45.00\", \"title\": \"GROCERIES\", \"amount\": 45.00, \"suggestedBudgetId\": 5}]";
+                    "Extract every visible transaction from the supplied bank statement image. " +
+                    "Respond with exactly one valid JSON array and nothing else. Do not include explanations, " +
+                    "introductions, markdown fences, comments, or text before or after the array. " +
+                    "Each array item must be an object with exactly these keys: " +
+                    "\"rawText\" (string containing the transaction line), " +
+                    "\"title\" (string containing the merchant or description), " +
+                    "\"amount\" (JSON number, never a formatted string), and " +
+                    "\"suggestedBudgetId\" (a budget ID from the supplied list as a number, or JSON null). " +
+                    "Do not invent unreadable values or transactions. If no transactions are visible, return []. " +
+                    "Example output: [{\"rawText\":\"12/01 WALMART Rs. 45.00\",\"title\":\"WALMART\",\"amount\":45.00,\"suggestedBudgetId\":5}]";
 
             List<Map<String, Object>> contentArray = new ArrayList<>();
             contentArray.add(Map.of("type", "text", "text", prompt));

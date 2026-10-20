@@ -151,11 +151,10 @@ public class StatementProcessorListener {
             logger.warn("AI categorization failed: {}", e.getMessage());
         }
 
-        aiResponse = cleanJsonResponse(aiResponse);
         if (payloadType == StatementMessage.PayloadType.IMAGE) {
-            processImageResponse(aiResponse, userId, requestId);
+            processImageResponse(extractJsonArray(cleanJsonResponse(aiResponse)), userId, requestId);
         } else {
-            processTextResponse(aiResponse, payload, userId, requestId);
+            processTextResponse(cleanJsonResponse(aiResponse), payload, userId, requestId);
         }
     }
 
@@ -225,6 +224,52 @@ public class StatementProcessorListener {
         if (response.endsWith("```")) {
             response = response.substring(0, response.length() - 3).trim();
         }
+        return response;
+    }
+
+    /**
+     * Vision models sometimes wrap their JSON array in a short explanation despite the prompt.
+     * Extract the first complete top-level array while respecting quoted brackets and escapes.
+     */
+    private String extractJsonArray(String response) {
+        if (response == null || response.isBlank()) {
+            return response;
+        }
+
+        int start = response.indexOf('[');
+        if (start < 0) {
+            return response;
+        }
+
+        int depth = 0;
+        boolean inString = false;
+        boolean escaped = false;
+        for (int i = start; i < response.length(); i++) {
+            char current = response.charAt(i);
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (current == '\\') {
+                    escaped = true;
+                } else if (current == '"') {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (current == '"') {
+                inString = true;
+            } else if (current == '[') {
+                depth++;
+            } else if (current == ']') {
+                depth--;
+                if (depth == 0) {
+                    return response.substring(start, i + 1);
+                }
+            }
+        }
+
+        // Leave malformed or truncated output intact so Jackson emits a useful parse error.
         return response;
     }
 }
