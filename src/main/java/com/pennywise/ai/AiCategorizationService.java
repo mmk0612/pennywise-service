@@ -59,9 +59,9 @@ public class AiCategorizationService {
                     "\"amount\" (JSON number, never a formatted string), and " +
                     "\"suggestedBudgetId\" (a budget ID from the supplied list as a number, or JSON null). " +
                     "For every transaction, choose the single best matching budget from the supplied list " +
-                    "by comparing its name with the merchant and transaction description. Use that budget's " +
-                    "exact numeric ID. Return null only when the budget list is empty or no listed budget is " +
-                    "a reasonable match; do not return null merely because the match is not exact. " +
+                    "only when the merchant and transaction description clearly support that match. Use that " +
+                    "budget's exact numeric ID. If the budget list is empty, no budget is a reasonable match, " +
+                    "or you are unsure between budgets, return null so the user can choose manually. " +
                     "Do not invent unreadable values or transactions. If no transactions are visible, return []. " +
                     "Example output: [{\"rawText\":\"12/01 WALMART Rs. 45.00\",\"title\":\"WALMART\",\"amount\":45.00,\"suggestedBudgetId\":5}]";
 
