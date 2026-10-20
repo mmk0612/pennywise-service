@@ -6,9 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -18,10 +15,8 @@ import com.pennywise.ai.AiPredictionLogRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -31,6 +26,7 @@ import java.util.List;
 public class StatementService {
 
     private static final Logger logger = LoggerFactory.getLogger(StatementService.class);
+    private static final long MAX_UPLOAD_SIZE_BYTES = 10L * 1024 * 1024;
 
     @Autowired
     private StatementUploadRequestRepository statementUploadRequestRepository;
@@ -48,6 +44,13 @@ public class StatementService {
     private String s3Bucket;
 
     public StatementUploadRequest processStatement(MultipartFile file, Long userId) throws Exception {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("The uploaded statement is empty.");
+        }
+        if (file.getSize() > MAX_UPLOAD_SIZE_BYTES) {
+            throw new IllegalArgumentException("Statement files must be 10 MB or smaller.");
+        }
+
         String filename = file.getOriginalFilename() != null ? file.getOriginalFilename().toLowerCase() : "";
 
         if (!filename.endsWith(".csv") && !filename.endsWith(".pdf") && 
@@ -85,7 +88,9 @@ public class StatementService {
                     .key(key)
                     .contentType(contentType)
                     .build();
-            s3Client.putObject(por, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+            try (InputStream input = file.getInputStream()) {
+                s3Client.putObject(por, RequestBody.fromInputStream(input, file.getSize()));
+            }
             uploadRequest.setS3Key(key);
             // Construct a public S3 URL. Adjust if using a different region or custom domain.
             String s3Url = String.format("https://%s.s3.amazonaws.com/%s", s3Bucket, key);
@@ -93,7 +98,27 @@ public class StatementService {
             statementUploadRequestRepository.save(uploadRequest);
             logger.info("Uploaded file to S3: {} (url={})", key, s3Url);
         } catch (Exception e) {
-            logger.warn("Failed to upload to S3, continuing processing locally: {}", e.getMessage());
+            logger.warn("Failed to upload to S3: {}", e.getMessage());
+            if (filename.endsWith(".pdf")) {
+                uploadRequest.setStatus("FAILED");
+                statementUploadRequestRepository.save(uploadRequest);
+                throw new IllegalStateException("PDF statement could not be stored for processing.", e);
+            }
+        }
+
+        if (filename.endsWith(".pdf")) {
+            StatementMessage message = new StatementMessage(
+                    uploadRequest.getId(), userId, List.of(), StatementMessage.PayloadType.IMAGE);
+            message.setPdfS3Key(key);
+            try {
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_NAME, RabbitMQConfig.ROUTING_KEY, message);
+            } catch (Exception e) {
+                uploadRequest.setStatus("FAILED");
+                statementUploadRequestRepository.save(uploadRequest);
+                throw new IllegalStateException("PDF statement could not be queued for processing.", e);
+            }
+            logger.info("Queued PDF statement {} for page-by-page processing", uploadRequest.getId());
+            return uploadRequest;
         }
 
         if (filename.endsWith(".csv")) {
@@ -105,18 +130,6 @@ public class StatementService {
                     if (row.length >= 3) {
                         payloads.add(String.join(" | ", row));
                     }
-                }
-            }
-        } else if (filename.endsWith(".pdf")) {
-            payloadType = StatementMessage.PayloadType.IMAGE;
-            try (PDDocument document = PDDocument.load(file.getInputStream())) {
-                PDFRenderer pdfRenderer = new PDFRenderer(document);
-                for (int page = 0; page < document.getNumberOfPages(); ++page) {
-                    BufferedImage bim = pdfRenderer.renderImageWithDPI(page, 300, ImageType.RGB);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(bim, "png", baos);
-                    String base64Image = Base64.getEncoder().encodeToString(baos.toByteArray());
-                    payloads.add("data:image/png;base64," + base64Image);
                 }
             }
         } else {

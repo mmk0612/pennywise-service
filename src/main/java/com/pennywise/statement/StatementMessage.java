@@ -14,6 +14,7 @@ public class StatementMessage implements Serializable {
     private Long userId;
     private List<String> payloads;
     private PayloadType payloadType;
+    private String pdfS3Key;
 
     public StatementMessage() {}
 
@@ -35,4 +36,7 @@ public class StatementMessage implements Serializable {
 
     public PayloadType getPayloadType() { return payloadType; }
     public void setPayloadType(PayloadType payloadType) { this.payloadType = payloadType; }
+
+    public String getPdfS3Key() { return pdfS3Key; }
+    public void setPdfS3Key(String pdfS3Key) { this.pdfS3Key = pdfS3Key; }
 }
